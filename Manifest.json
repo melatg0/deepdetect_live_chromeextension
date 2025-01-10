@@ -1,0 +1,15 @@
+{
+    "manifest_version": 3,
+    "name": "Deep Detect Live Extensions",
+    "description": "Detects if there are deepfake videos on users website.",
+    "version": "1.0",
+    "permissions": ["activeTab", "scripting", "tabs"],
+    
+    "action": {
+        "default_popup": "popup.html",
+        "default_icon": "icon.jfif"
+    },
+    "host_permissions": [
+        "*://*/*"
+    ]
+}
