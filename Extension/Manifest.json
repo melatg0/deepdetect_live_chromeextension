@@ -1,0 +1,11 @@
+{
+    "name": "Deep Detect Live Extensions",
+    "description": "Detects if there are deepfake videos on users website.","version": "1.0",
+    "permissions": ["activeTab", "scripting"],
+    "manifest_version": 3,
+    "action": {
+        "default_popup": "Deep Detect Live",
+        "default_icon": ""
+
+    }
+}
