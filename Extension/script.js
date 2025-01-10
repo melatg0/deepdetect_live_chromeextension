@@ -20,7 +20,7 @@ async function loadSession(){
 }
 
 async function videoProcessing(session, tensors){
-    //process the tensors here]
+    //process the tensors here
     const result = await session.run({input: tensors});
     return result
     }
@@ -58,6 +58,8 @@ if (video.length == 0){
     const result = captureFrame(session); //result holds the model prediction because videoProcessing is called within captureFrame
 
     //send message to popup.js
-    chrome.runtime.sendMessage
-
+    chrome.runtime.sendMessage(result, function(){
+        console.log('message sent');
+})
 }
+
