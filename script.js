@@ -1,65 +1,142 @@
-//handles the ONNX model and frame prediction. Will send a message to popup.js to update the popup with the prediction
-//onnxruntime-web must be installed beforehand
-//npm install onnxruntime-web
+// Send prediction result back to popup
+function sendPredictionResult(result) {
+    chrome.runtime.sendMessage({
+        type: "prediction",
+        result: result
+    });
+}
 
+//handles the ONNX model and frame prediction
+let ort;
 
-import * as ort from 'onnxruntime-web';
-
+// Configure ONNX Runtime Web.js
+const options = {
+    executionProviders: ['cpu'],
+    graphOptimizationLevel: 'all'
+};
 
 //initialize the onnxruntime-web lib
 async function initializeOnnx(){
-    await ort.ready();
-    console.log('onnxruntime-web initialized');
+    try {
+        // Create a promise that resolves when ONNX Runtime is ready
+        const ortReady = new Promise((resolve, reject) => {
+            // Dynamically load ONNX Runtime
+            const ortScript = document.createElement('script');
+            ortScript.src = chrome.runtime.getURL('node_modules/onnxruntime-web/dist/ort.min.js');
+            
+            ortScript.onload = () => {
+                // Wait for next tick to ensure ort is defined
+                setTimeout(() => {
+                    if (typeof window.ort !== 'undefined') {
+                        ort = window.ort;
+                        console.log('onnxruntime-web initialized');
+                        resolve();
+                    } else {
+                        reject(new Error('Failed to load ONNX Runtime'));
+                    }
+                }, 100);
+            };
+            
+            ortScript.onerror = () => {
+                reject(new Error('Failed to load ONNX Runtime script'));
+            };
+            
+            document.head.appendChild(ortScript);
+        });
+
+        await ortReady;
+        return true;
+    } catch (error) {
+        console.error('Error initializing onnxruntime-web:', error);
+        return false;
+    }
 }
 
 //load the onnx inference model
 async function loadSession(){
-    const session = await ort.InferenceSession.create("model.onnx");
-    console.log('model loaded');
-    return session;
-}
-
-async function videoProcessing(session, tensors){
-    //process the tensors here
-    const result = await session.run({input: tensors});
-    return result
+    try {
+        if (typeof ort === 'undefined') {
+            throw new Error('ONNX Runtime not initialized');
+        }
+        const modelPath = chrome.runtime.getURL('model.onnx');
+        console.log('Loading model from:', modelPath);
+        const session = await ort.InferenceSession.create(modelPath, options);
+        console.log('model loaded successfully');
+        return session;
+    } catch (error) {
+        console.error('Error loading the model:', error);
+        throw error;
     }
-
-
+}
 
 //if video exists then capture frame will be called
 //within capture frame we call videoProcessing function
-
-//frame capture function
-function captureFrame(session){
+async function captureFrame(session){
     const frame_num = 10; //number of frames to capture
-    for (let i = 0; i<frame_num; i++){
-        const canvas = document.createElement('canvas');
-        const context = canvas.getContext('2d');
-        let canvas_width = video.width;
-        let canvas_height = video.height;
-        context.drawImage(video, 0, 0, canvas_width, canvas_height);
-        const imageData = context.getImageData(0, 0, video.width, video.height);
-        const img_input = new ort.Tensor('float32', imageData.data, [1, 3, video.width, video.height]);
-        let result = videoProcessing(session, img_input);
+    let result;
+    for (let i = 0; i < frame_num; i++){
+        const video = document.querySelector("video");
+        if (video) {
+            const canvas = document.createElement('canvas');
+            const context = canvas.getContext('2d');
+            let canvas_width = video.width || video.videoWidth;
+            let canvas_height = video.height || video.videoHeight;
+            canvas.width = canvas_width;
+            canvas.height = canvas_height;
+            context.drawImage(video, 0, 0, canvas_width, canvas_height);
+            const imageData = context.getImageData(0, 0, canvas_width, canvas_height);
+            const img_input = new ort.Tensor('float32', imageData.data, [1, 3, canvas_height, canvas_width]);
+            result = await videoProcessing(session, img_input);
+        }
     }
-    return result
+    return result;
 }
 
-
-initializeOnnx(); //initialize the onnxruntime-web
-const session = loadSession(); //load the model
-
-const video = document.getElementsByTagName("video"); //search for video element
-if (video.length == 0){
-    console.log('No videos') //if collection of video element is length 0 no video msg is sent
-    return
-} else {
-    const result = captureFrame(session); //result holds the model prediction because videoProcessing is called within captureFrame
-
-    //send message to popup.js
-    chrome.runtime.sendMessage(result, function(){
-        console.log('message sent');
-})
+async function videoProcessing(session, tensors){
+    try {
+        //process the tensors here
+        const result = await session.run({input: tensors});
+        const prediction = Array.from(result.output.data)[0];
+        console.log('Prediction result:', prediction);
+        return prediction;
+    } catch (error) {
+        console.error('Error processing video:', error);
+        throw error;
+    }
 }
 
+// Initialize everything in sequence
+async function init() {
+    try {
+        console.log('Starting initialization...');
+        const initialized = await initializeOnnx();
+        if (!initialized) {
+            throw new Error('Failed to initialize ONNX Runtime');
+        }
+        console.log('ONNX Runtime initialized, loading session...');
+        const session = await loadSession();
+        console.log('Session loaded successfully');
+        return session;
+    } catch (error) {
+        console.error('Initialization failed:', error);
+        throw error;
+    }
+}
+
+// Start the initialization
+init().then(async session => {
+    console.log('Ready to process video');
+    const video = document.querySelector("video");
+    if (!video) {
+        console.log('No videos');
+        sendPredictionResult(0);
+    } else {
+        console.log('Processing video...');
+        const result = await captureFrame(session);
+        console.log('Processing complete, result:', result);
+        sendPredictionResult(result);
+    }
+}).catch(error => {
+    console.error('Failed to initialize:', error);
+    sendPredictionResult(-1); // Send error indicator
+});

@@ -1,40 +1,94 @@
 //Handles the popup.html UI and injects script.js into the tab
 
 const indicator = document.getElementById('indicator'); //element where the deepfake result will be posted
-const body = document.getElementById(); //for background update. 
-
-//listens for messages from the script.js and changes the indicator text
+const body = document.getElementById('body'); //for background update. 
 
 
-
-//injector for script.js
-//if issues arise check allframes boolean
-chrome.tabs.query({ active: true, currentWindow: true }, function(tabs) {
-    chrome.scripting.executeScript({
-        target: { tabId: tabs[0].id },
-        files: ["script.js"],
-    })
-        .then(() => console.log("script injected"))
-        .catch((error) => console.error("script injection failed:", error));
+// When popup opens, check for videos on the active tab
+document.addEventListener('DOMContentLoaded', async function() {
+    indicator.textContent = 'Checking for videos...';
+    
+    try {
+        // Get the active tab
+        const tabs = await chrome.tabs.query({active: true, currentWindow: true});
+        const activeTab = tabs[0];
+        
+        // Send message to content script
+        chrome.tabs.sendMessage(activeTab.id, {
+            action: "checkForVideo",
+            tabId: activeTab.id
+        }, async function(response) {
+            if (chrome.runtime.lastError) {
+                console.log('Content script not yet injected, injecting now...');
+                try {
+                    // Inject content script
+                    await chrome.scripting.executeScript({
+                        target: { tabId: activeTab.id },
+                        files: ['content.js']
+                    });
+                    
+                    // Try sending the message again after injection
+                    chrome.tabs.sendMessage(activeTab.id, {
+                        action: "checkForVideo",
+                        tabId: activeTab.id
+                    }, function(response) {
+                        handleVideoCheckResponse(response);
+                    });
+                } catch (error) {
+                    console.error('Failed to inject content script:', error);
+                    indicator.textContent = 'Error: Could not check for videos';
+                }
+                return;
+            }
+            
+            handleVideoCheckResponse(response);
+        });
+    } catch (error) {
+        console.error('Error:', error);
+        indicator.textContent = 'Error: ' + error.message;
+    }
 });
 
-
-
-//listens and recieves the result from script.js
-chrome.runtime.onMessage.addListener( function(message, sender, sendResponse){
-    console.log("message recieved: ",message);
-    indicator.textContent = message;
-})
-
-//changes background color and indicator text color based on the message value
-if (message > .5){
-    body.style.backgroundColor = 'red';
-    indicator.style.color = 'black';
-} else {
-    body.style.backgroundColor = 'green';
-    indicator.style.color = 'black';
+function handleVideoCheckResponse(response) {
+    if (response && response.found) {
+        console.log('Videos found:', response.count);
+        indicator.textContent = 'Processing video...';
+        // Inject script.js for video processing
+        chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
+            chrome.scripting.executeScript({
+                target: { tabId: tabs[0].id },
+                files: ['script.js']
+            }).catch(error => {
+                console.error('Failed to inject script.js:', error);
+                indicator.textContent = 'Error: Failed to start video processing';
+            });
+        });
+    } else {
+        console.log('No videos found');
+        indicator.textContent = 'No videos found on this page';
+    }
 }
 
-
-//maybe add a js command so that when message is greater than .5, the indicator turns red and when its below turns green.
-
+// Listen for messages from content script or script.js
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+    console.log('Received message:', message);
+    
+    if (message.type === "prediction") {
+        console.log('Received prediction:', message.result);
+        // Update UI with prediction result
+        indicator.textContent = `Deepfake probability: ${message.result}`;
+        
+        // Update background color based on prediction
+        if (message.result > 0.5) {
+            body.style.backgroundColor = 'red';
+            indicator.style.color = 'black';
+        } else {
+            body.style.backgroundColor = 'green';
+            indicator.style.color = 'black';
+        }
+    } else if (message.action === "videoDetected") {
+        indicator.textContent = 'Processing video...';
+    }
+    
+    return true; // Keep message channel open for async response
+});
