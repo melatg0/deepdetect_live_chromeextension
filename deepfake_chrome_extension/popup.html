@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DeepFake Detector</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <h1>DeepFake Detector</h1>
+        <p class="subtext">AI-powered real-time deepfake analysis</p>
+
+        <button id="capture-btn">Analyze Video</button>
+
+        <div class="status-card">
+            <h2 id="risk-status">Waiting for Analysis...</h2>
+            <p>Fake Probability: <span id="probability">--%</span></p>
+        </div>
+
+        <!-- 🔥 Feedback section moved below probability and above frames -->
+        <div id="feedback-container" style="display: none;">
+            <h3>Is this video real or fake?</h3>
+            <button id="real-btn" class="feedback-btn">This is real</button>
+            <button id="fake-btn" class="feedback-btn">This is fake</button>
+            
+            <h3>How confident are you?</h3>
+            <input type="range" id="certainty-slider" min="1" max="100" value="50">
+            <p>Certainty Level: <span id="certainty-value">50</span>%</p>
+        </div>
+
+        <h3>Captured Frames</h3>
+        <div id="frames-container"></div>
+
+        <div class="footer">
+            <p>Powered by AI & Computer Vision</p>
+        </div>
+    </div>
+
+    <script src="popup.js"></script>
+</body>
+</html>
