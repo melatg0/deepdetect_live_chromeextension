@@ -1,3 +1,4 @@
+/*
 // Prevent multiple injections
 if (window.hasRun) {
     console.log('Content script already injected');
@@ -50,3 +51,4 @@ function initializeContentScript() {
         });
     }
 }
+*/

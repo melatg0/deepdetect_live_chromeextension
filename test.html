@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Video Test Page</title>
+    <style>
+        .prediction-display {
+            margin-top: 20px;
+            padding: 10px;
+            border: 2px solid #ccc;
+            border-radius: 5px;
+            background-color: #f5f5f5;
+            transition: all 0.3s ease;
+        }
+        .prediction-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #333;
+            transition: color 0.3s ease;
+        }
+        .status {
+            color: #666;
+            margin-bottom: 10px;
+        }
+        .real {
+            background-color: #d4edda;
+            border-color: #28a745;
+        }
+        .fake {
+            background-color: #f8d7da;
+            border-color: #dc3545;
+        }
+        .prediction-value.real {
+            color: #28a745;
+        }
+        .prediction-value.fake {
+            color: #dc3545;
+        }
+        .video-container {
+            margin-bottom: 20px;
+        }
+        .video-title {
+            font-size: 18px;
+            margin-bottom: 10px;
+            color: #333;
+        }
+    </style>
+    <!-- Load ONNX Runtime Web from CDN with error handling -->
+    <script>
+        // Add error handler for script loading
+        window.onerror = function(msg, url, lineNo, columnNo, error) {
+            console.error('Script error:', msg, 'URL:', url, 'Line:', lineNo);
+            return false;
+        };
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/onnxruntime-web@1.16.3/dist/ort.min.js" 
+            crossorigin="anonymous"
+            onerror="console.error('Failed to load ONNX Runtime')"></script>
+</head>
+<body>
+    <h1>Video Test Page</h1>
+    <div class="video-container">
+        <div class="video-title">Test Video 1 (test.mp4)</div>
+        <video width="640" height="360" controls>
+            <source src="test.mp4" type="video/mp4">
+            Your browser does not support the video element.
+        </video>
+    </div>
+
+    <div class="prediction-display" id="predictionDisplay">
+        <div class="status" id="status">Status: Waiting for video...</div>
+        <div>Prediction: <span class="prediction-value" id="prediction">-</span></div>
+    </div>
+
+    <!-- Include your script -->
+    <script defer src="script.js"></script>
+</body>
+</html>

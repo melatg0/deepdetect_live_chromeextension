@@ -15,16 +15,15 @@
         "default_popup": "popup.html",
         "default_icon": "icon.jfif"
     },
-    "web_accessible_resources": [{
+    "web_accessible_resources": [
+    {
         "resources": [
-            "node_modules/onnxruntime-web/dist/ort.min.js",
-            "node_modules/onnxruntime-web/dist/ort-wasm-simd-threaded.wasm",
-            "node_modules/onnxruntime-web/dist/ort-wasm-simd-threaded.jsep.wasm",
-            "model.onnx",
-            "script.js"
+            "model.onnx"
         ],
         "matches": ["<all_urls>"]
-    }],
+    }
+]
+,
     "content_scripts": [{
         "matches": ["<all_urls>"],
         "js": ["content.js"],
@@ -35,6 +34,6 @@
         "type": "module"
     },
     "content_security_policy": {
-        "extension_pages": "script-src 'self' 'wasm-unsafe-eval'; object-src 'self'"
-    }
+    "extension_pages": "script-src 'self' 'unsafe-eval'; object-src 'self'; worker-src 'self';"
+}
 }

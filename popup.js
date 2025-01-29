@@ -1,43 +1,34 @@
-//Handles the popup.html UI and injects script.js into the tab
-
-const indicator = document.getElementById('indicator'); //element where the deepfake result will be posted
-const body = document.getElementById('body'); //for background update. 
-
-
-// When popup opens, check for videos on the active tab
 document.addEventListener('DOMContentLoaded', async function() {
+    const indicator = document.getElementById('indicator');
+    const body = document.body;
+    
     indicator.textContent = 'Checking for videos...';
     
     try {
         // Get the active tab
-        const tabs = await chrome.tabs.query({active: true, currentWindow: true});
+        const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
         const activeTab = tabs[0];
-        
-        // Send message to content script
-        chrome.tabs.sendMessage(activeTab.id, {
-            action: "checkForVideo",
-            tabId: activeTab.id
-        }, async function(response) {
-            if (chrome.runtime.lastError) {
-                console.log('Content script not yet injected, injecting now...');
+
+        // Send message to content script to check for videos
+        chrome.tabs.sendMessage(activeTab.id, { action: "checkForVideo" }, async function(response) {
+            if (chrome.runtime.lastError || !response) {
+                console.log('Content script not yet injected or not responding.');
+                indicator.textContent = 'No response, injecting content script...';
+                
                 try {
                     // Inject content script
                     await chrome.scripting.executeScript({
                         target: { tabId: activeTab.id },
                         files: ['content.js']
                     });
-                    
-                    // Try sending the message again after injection
-                    chrome.tabs.sendMessage(activeTab.id, {
-                        action: "checkForVideo",
-                        tabId: activeTab.id
-                    }, function(response) {
-                        handleVideoCheckResponse(response);
-                    });
+
+                    // Retry checking for videos
+                    chrome.tabs.sendMessage(activeTab.id, { action: "checkForVideo" }, handleVideoCheckResponse);
                 } catch (error) {
                     console.error('Failed to inject content script:', error);
                     indicator.textContent = 'Error: Could not check for videos';
                 }
+                
                 return;
             }
             
@@ -49,20 +40,13 @@ document.addEventListener('DOMContentLoaded', async function() {
     }
 });
 
+// Handle the response from content.js about video detection
 function handleVideoCheckResponse(response) {
+    const indicator = document.getElementById('indicator');
+
     if (response && response.found) {
         console.log('Videos found:', response.count);
         indicator.textContent = 'Processing video...';
-        // Inject script.js for video processing
-        chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
-            chrome.scripting.executeScript({
-                target: { tabId: tabs[0].id },
-                files: ['script.js']
-            }).catch(error => {
-                console.error('Failed to inject script.js:', error);
-                indicator.textContent = 'Error: Failed to start video processing';
-            });
-        });
     } else {
         console.log('No videos found');
         indicator.textContent = 'No videos found on this page';
@@ -71,24 +55,21 @@ function handleVideoCheckResponse(response) {
 
 // Listen for messages from content script or script.js
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+    const indicator = document.getElementById('indicator');
+    const body = document.body;
+
     console.log('Received message:', message);
     
     if (message.type === "prediction") {
         console.log('Received prediction:', message.result);
-        // Update UI with prediction result
         indicator.textContent = `Deepfake probability: ${message.result}`;
-        
-        // Update background color based on prediction
-        if (message.result > 0.5) {
-            body.style.backgroundColor = 'red';
-            indicator.style.color = 'black';
-        } else {
-            body.style.backgroundColor = 'green';
-            indicator.style.color = 'black';
-        }
+
+        // Change background color based on prediction
+        body.style.backgroundColor = message.result > 0.5 ? 'red' : 'green';
+        indicator.style.color = 'black';
     } else if (message.action === "videoDetected") {
         indicator.textContent = 'Processing video...';
     }
-    
+
     return true; // Keep message channel open for async response
 });

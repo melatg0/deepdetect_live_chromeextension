@@ -1,3 +1,4 @@
+/*
 // Handle communication between content scripts and popup
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     // Forward messages from content script to popup and vice versa
@@ -22,3 +23,4 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
         }).catch(err => console.error('Failed to inject script:', err));
     }
 });
+*/
