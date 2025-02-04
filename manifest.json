@@ -3,8 +3,11 @@
     "name": "DeepFake Detector",
     "version": "1.0",
     "description": "Detects deepfake videos in real-time by analyzing frames.",
-    "permissions": ["activeTab", "storage", "scripting"],
+    "permissions": ["activeTab", "storage", "scripting", "webNavigation"],
     "host_permissions": ["<all_urls>"],
+    "background": {
+      "service_worker": "background.js"
+    },
     "action": {
       "default_popup": "popup.html",
       "default_icon": "icon.png"

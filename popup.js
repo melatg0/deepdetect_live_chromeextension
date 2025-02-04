@@ -11,6 +11,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     let videoFrames = [];
 
+    // Capture button functionality
     captureBtn.addEventListener("click", async () => {
         try {
             let [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
@@ -20,6 +21,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 return;
             }
 
+            // Inject content script and start capturing frames
             await chrome.scripting.executeScript({
                 target: { tabId: tab.id },
                 files: ["content.js"]
@@ -27,29 +29,35 @@ document.addEventListener("DOMContentLoaded", () => {
 
             chrome.tabs.sendMessage(tab.id, { type: "capture_video" });
 
+            // Reset UI
             framesContainer.innerHTML = "";
             probabilityText.innerText = "--%";
             riskStatus.innerText = "Analyzing...";
             feedbackContainer.style.display = "none";
-
         } catch (error) {
             alert("⚠ Cannot analyze video on this page. Try another website.");
         }
     });
 
+    // Update certainty slider value dynamically
     certaintySlider.addEventListener("input", () => {
         certaintyValue.innerText = certaintySlider.value;
     });
 
+    // Listen for messages from the content script
     chrome.runtime.onMessage.addListener((message) => {
         if (message.type === "video_frame") {
+            // Append captured frame to the UI
             let img = document.createElement("img");
             img.src = message.frame;
             img.className = "video-frame";
             framesContainer.appendChild(img);
             videoFrames.push(message.frame);
         } else if (message.type === "video_frames_done") {
+            // Simulate prediction result
             let probability = Math.floor(Math.random() * 100);
+
+            // Display prediction and update UI
             setTimeout(() => {
                 probabilityText.innerText = probability + "%";
 
@@ -67,27 +75,36 @@ document.addEventListener("DOMContentLoaded", () => {
                     feedbackContainer.style.display = "block";
                 }
             }, 500);
+        } else if (message.type === "no_video_detected") {
+            alert("⚠ No video detected on this page. Please try again.");
         }
     });
 
+    // Save user feedback to local storage
     function storeFeedback(isFake) {
         let feedbackData = {
             timestamp: new Date().toISOString(),
             frames: videoFrames,
             probability: probabilityText.innerText,
             user_label: isFake ? "Fake" : "Real",
-            certainty: certaintySlider.value
+            certainty: certaintySlider.value,
         };
 
         chrome.storage.local.get({ dataset: [] }, (result) => {
             let dataset = result.dataset;
             dataset.push(feedbackData);
             chrome.storage.local.set({ dataset: dataset }, () => {
+                console.log("Feedback saved:", feedbackData);
+
+                // Hide feedback section after submission
+                feedbackContainer.style.display = "none";
+
                 alert("✅ Thank you for your feedback!");
             });
         });
     }
 
+    // Handle real/fake feedback buttons
     realBtn.addEventListener("click", () => storeFeedback(false));
     fakeBtn.addEventListener("click", () => storeFeedback(true));
 });

@@ -1,0 +1,165 @@
+/* General Body Styles */
+body {
+    font-family: 'Arial', sans-serif;
+    background: #121212;
+    color: #ffffff;
+    text-align: center;
+    margin: 0;
+    padding: 20px;
+    width: 350px;
+}
+
+.container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+/* Sleek Header with Toggle */
+.header {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-bottom: 20px;
+    border-bottom: 1px solid #444;
+    margin-bottom: 20px;
+}
+
+.toggle-label {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 14px;
+    width: 120px;
+}
+
+.toggle-input {
+    display: none;
+}
+
+.toggle-slider {
+    width: 40px;
+    height: 20px;
+    background: #555;
+    border-radius: 20px;
+    position: relative;
+    cursor: pointer;
+    transition: background 0.3s;
+}
+
+.toggle-slider::before {
+    content: '';
+    position: absolute;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: white;
+    top: 2px;
+    left: 2px;
+    transition: transform 0.3s, background 0.3s;
+}
+
+.toggle-input:checked + .toggle-slider {
+    background: #0078ff;
+}
+
+.toggle-input:checked + .toggle-slider::before {
+    transform: translateX(20px);
+    background: #fff;
+}
+
+/* Main UI Styles */
+h1 {
+    font-size: 22px;
+    margin-bottom: 5px;
+}
+
+.subtext {
+    font-size: 12px;
+    color: #b0b0b0;
+    margin-bottom: 20px;
+}
+
+.analyze-btn {
+    background: #0078ff;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    font-size: 16px;
+    border-radius: 30px;
+    cursor: pointer;
+    transition: background 0.3s ease;
+}
+
+.analyze-btn:hover {
+    background: #005fcc;
+}
+
+.status-card {
+    background: #222;
+    padding: 15px;
+    border-radius: 8px;
+    width: 100%;
+    margin: 20px 0;
+    text-align: center;
+}
+
+#probability {
+    font-size: 22px;
+    font-weight: bold;
+    color: white;
+}
+
+#feedback-container {
+    margin-top: 20px;
+    padding: 10px;
+    background: #282828;
+    border-radius: 10px;
+    width: 100%;
+    text-align: center;
+    display: none;
+}
+
+.feedback-btn {
+    background: #ff4d4d;
+    color: white;
+    border: none;
+    padding: 8px 15px;
+    font-size: 14px;
+    border-radius: 20px;
+    cursor: pointer;
+    margin: 5px;
+    transition: background 0.3s ease;
+}
+
+.feedback-btn:hover {
+    background: #ff1a1a;
+}
+
+.slider {
+    width: 80%;
+    margin-top: 10px;
+}
+
+#frames-container {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 10px;
+    max-width: 100%;
+    margin-top: 20px;
+}
+
+.video-frame {
+    width: 80px;
+    height: 45px;
+    border-radius: 5px;
+    border: 1px solid #444;
+}
+
+.footer {
+    margin-top: 20px;
+    font-size: 10px;
+    color: #777;
+}

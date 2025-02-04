@@ -9,12 +9,15 @@ function captureFramesRealTime(videoElement) {
 
     let frameCount = 0;
     let maxFrames = 10;
-    let captureInterval = 200; // Capture every 0.2 seconds (5x faster)
+    let captureInterval = 200;
 
     function capture() {
         if (frameCount >= maxFrames) {
             console.log("DeepFake Detector: Finished capturing 10 frames.");
+
+            // Notify the popup that frame capture is complete
             chrome.runtime.sendMessage({ type: "video_frames_done" });
+
             return;
         }
 
@@ -30,6 +33,7 @@ function captureFramesRealTime(videoElement) {
     capture();
 }
 
+// Listen for messages from the popup
 chrome.runtime.onMessage.addListener((message) => {
     if (message.type === "capture_video") {
         let videos = document.getElementsByTagName("video");

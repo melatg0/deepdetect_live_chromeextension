@@ -8,24 +8,32 @@
 </head>
 <body>
     <div class="container">
+        <!-- Background Detection Toggle at the Top -->
+        <div class="header">
+            <label class="toggle-label">
+                <span>Run in Background</span>
+                <input type="checkbox" id="background-toggle" class="toggle-input">
+                <span class="toggle-slider"></span>
+            </label>
+        </div>
+
         <h1>DeepFake Detector</h1>
         <p class="subtext">AI-powered real-time deepfake analysis</p>
 
-        <button id="capture-btn">Analyze Video</button>
+        <button id="capture-btn" class="analyze-btn">Analyze Video</button>
 
         <div class="status-card">
             <h2 id="risk-status">Waiting for Analysis...</h2>
-            <p>Fake Probability: <span id="probability">--%</span></p>
+            <p>Probability: <span id="probability">--%</span></p>
         </div>
 
-        <!-- 🔥 Feedback section moved below probability and above frames -->
         <div id="feedback-container" style="display: none;">
             <h3>Is this video real or fake?</h3>
             <button id="real-btn" class="feedback-btn">This is real</button>
             <button id="fake-btn" class="feedback-btn">This is fake</button>
             
             <h3>How confident are you?</h3>
-            <input type="range" id="certainty-slider" min="1" max="100" value="50">
+            <input type="range" id="certainty-slider" min="1" max="100" value="50" class="slider">
             <p>Certainty Level: <span id="certainty-value">50</span>%</p>
         </div>
 
